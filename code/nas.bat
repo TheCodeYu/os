@@ -1,0 +1,1 @@
+..\tools\nask.exe boot.nas boot.img
