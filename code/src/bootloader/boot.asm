@@ -1,51 +1,36 @@
-;/***************************************************
-;		版权声明
-;
-;	本操作系统名为：MINE
-;	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-;	只允许个人学习以及公开交流使用
-;
-;	代码最终所有权及解释权归田宇所有；
-;
-;	本模块作者：	田宇
-;	EMail:		345538255@qq.com
-;
-;
-;***************************************************/
+org	0x7c00	
 
-	org	0x7c00	
+BaseOfStack								equ	0x7c00
 
-BaseOfStack	equ	0x7c00
+BaseOfLoader							equ	0x1000
+OffsetOfLoader						equ	0x00
 
-BaseOfLoader	equ	0x1000
-OffsetOfLoader	equ	0x00
+RootDirSectors						equ	14
+SectorNumOfRootDirStart		equ	19
+SectorNumOfFAT1Start			equ	1
+SectorBalance							equ	17	
 
-RootDirSectors	equ	14
-SectorNumOfRootDirStart	equ	19
-SectorNumOfFAT1Start	equ	1
-SectorBalance	equ	17	
-
-	jmp	short Label_Start
+	jmp	short Label_Start											;跳转指令，跳过非执行代码
 	nop
-	BS_OEMName	db	'MINEboot'
-	BPB_BytesPerSec	dw	512
-	BPB_SecPerClus	db	1
-	BPB_RsvdSecCnt	dw	1
-	BPB_NumFATs	db	2
-	BPB_RootEntCnt	dw	224
-	BPB_TotSec16	dw	2880
-	BPB_Media	db	0xf0
-	BPB_FATSz16	dw	9
-	BPB_SecPerTrk	dw	18
-	BPB_NumHeads	dw	2
-	BPB_HiddSec	dd	0
-	BPB_TotSec32	dd	0
-	BS_DrvNum	db	0
-	BS_Reserved1	db	0
-	BS_BootSig	db	0x29
-	BS_VolID	dd	0
-	BS_VolLab	db	'boot loader'
-	BS_FileSysType	db	'FAT12   '
+	BS_OEMName							db	'MINEboot'		;生产厂商名
+	BPB_BytesPerSec					dw	512						;每扇区字节数
+	BPB_SecPerClus					db	1							;每簇扇区数
+	BPB_RsvdSecCnt					dw	1							;保留扇区数
+	BPB_NumFATs							db	2							;FAT表份数
+	BPB_RootEntCnt					dw	224						;根目录容纳目录项数
+	BPB_TotSec16						dw	2880					;总扇区数
+	BPB_Media								db	0xf0					;介质描述符
+	BPB_FATSz16							dw	9							;每FAT扇区数
+	BPB_SecPerTrk						dw	18						;每磁道扇区数
+	BPB_NumHeads						dw	2							;磁头数
+	BPB_HiddSec							dd	0							;隐藏扇区数
+	BPB_TotSec32						dd	0							;如果BPB_TotSec16为0，则由此记录扇区数
+	BS_DrvNum								db	0							;int13h的驱动器号
+	BS_Reserved1						db	0							;保留
+	BS_BootSig							db	0x29					;扩展引导标记
+	BS_VolID								dd	0							;卷序列号
+	BS_VolLab								db	'boot loader'	;卷标
+	BS_FileSysType					db	'FAT12   '		;文件系统类型
 
 Label_Start:
 
@@ -199,7 +184,7 @@ Label_Go_On_Loading_File:
 
 Label_File_Loaded:
 	
-	jmp	$
+	jmp	BaseOfLoader:OffsetOfLoader
 
 ;=======	read one sector from floppy
 
@@ -275,17 +260,17 @@ Label_Even_2:
 ;=======	tmp variable
 
 RootDirSizeForLoop	dw	RootDirSectors
-SectorNo		dw	0
-Odd			db	0
+SectorNo						dw	0
+Odd									db	0
 
 ;=======	display messages
 
-StartBootMessage:	db	"Start Boot"
-NoLoaderMessage:	db	"ERROR:No LOADER Found"
-LoaderFileName:		db	"LOADER  BIN",0
+StartBootMessage:		db	"Start Boot"
+NoLoaderMessage:		db	"ERROR:No LOADER Found"
+LoaderFileName:			db	"LOADER  BIN",0
 
 ;=======	fill zero until whole sector
 
 	times	510 - ($ - $$)	db	0
-	dw	0xaa55
+	dw	0xaa55				;
 
