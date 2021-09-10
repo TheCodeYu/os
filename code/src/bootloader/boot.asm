@@ -24,7 +24,7 @@ SectorBalance							equ	17
 	BPB_SecPerTrk						dw	18						;每磁道扇区数
 	BPB_NumHeads						dw	2							;磁头数
 	BPB_HiddSec							dd	0							;隐藏扇区数
-	BPB_TotSec32						dd	0							;如果BPB_TotSec16为0，则由此记录扇区数
+	BPB_TotSec32						dd	2880					;如果BPB_TotSec16为0，则由此记录扇区数
 	BS_DrvNum								db	0							;int13h的驱动器号
 	BS_Reserved1						db	0							;保留
 	BS_BootSig							db	0x29					;扩展引导标记
