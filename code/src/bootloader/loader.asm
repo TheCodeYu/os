@@ -1,4 +1,17 @@
-
+;/***************************************************
+;		版权声明
+;
+;	本操作系统名为：MINE
+;	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
+;	只允许个人学习以及公开交流使用
+;
+;	代码最终所有权及解释权归田宇所有；
+;
+;	本模块作者：	田宇
+;	EMail:		345538255@qq.com
+;
+;
+;***************************************************/
 
 org	10000h
 	jmp	Label_Start
@@ -21,7 +34,7 @@ LABEL_DESC_DATA32:	dd	0x0000FFFF,0x00CF9200
 
 GdtLen	equ	$ - LABEL_GDT
 GdtPtr	dw	GdtLen - 1
-	dd	LABEL_GDT
+	dd	LABEL_GDT	;be carefull the address(after use org)!!!!!!
 
 SelectorCode32	equ	LABEL_DESC_CODE32 - LABEL_GDT
 SelectorData32	equ	LABEL_DESC_DATA32 - LABEL_GDT
@@ -73,7 +86,6 @@ Label_Start:
 
 	cli
 
-	db	0x66
 	lgdt	[GdtPtr]	
 
 	mov	eax,	cr0
@@ -173,9 +185,9 @@ Label_FileName_Found:
 	push	cx
 	add	cx,	ax
 	add	cx,	SectorBalance
-	mov	eax,	BaseTmpOfKernelAddr	;BaseOfKernelFile
+	mov	eax,	BaseTmpOfKernelAddr;BaseOfKernelFile
 	mov	es,	eax
-	mov	bx,	OffsetTmpOfKernelFile	;OffsetOfKernelFile
+	mov	bx,	OffsetTmpOfKernelFile;OffsetOfKernelFile
 	mov	ax,	cx
 
 Label_Go_On_Loading_File:
@@ -195,7 +207,7 @@ Label_Go_On_Loading_File:
 ;;;;;;;;;;;;;;;;;;;;;;;	
 	push	cx
 	push	eax
-	push	fs
+;	push	fs
 	push	edi
 	push	ds
 	push	esi
@@ -227,7 +239,7 @@ Label_Mov_Kernel:	;------------------
 	pop	esi
 	pop	ds
 	pop	edi
-	pop	fs
+;	pop	fs
 	pop	eax
 	pop	cx
 ;;;;;;;;;;;;;;;;;;;;;;;	
@@ -239,6 +251,7 @@ Label_Mov_Kernel:	;------------------
 	mov	dx,	RootDirSectors
 	add	ax,	dx
 	add	ax,	SectorBalance
+;	add	bx,	[BPB_BytesPerSec]	
 
 	jmp	Label_Go_On_Loading_File
 
@@ -263,7 +276,7 @@ KillMotor:
 	mov	ax,	1301h
 	mov	bx,	000Fh
 	mov	dx,	0400h		;row 4
-	mov	cx,	24
+	mov	cx,	44
 	push	ax
 	mov	ax,	ds
 	mov	es,	ax
@@ -284,12 +297,15 @@ Label_Get_Mem_Struct:
 	int	15h
 	jc	Label_Get_Mem_Fail
 	add	di,	20
+	inc	dword	[MemStructNumber]
 
 	cmp	ebx,	0
 	jne	Label_Get_Mem_Struct
 	jmp	Label_Get_Mem_OK
 
 Label_Get_Mem_Fail:
+
+	mov	dword	[MemStructNumber],	0
 
 	mov	ax,	1301h
 	mov	bx,	008Ch
@@ -301,7 +317,6 @@ Label_Get_Mem_Fail:
 	pop	ax
 	mov	bp,	GetMemStructErrMessage
 	int	10h
-	jmp	$
 
 Label_Get_Mem_OK:
 	
@@ -317,6 +332,8 @@ Label_Get_Mem_OK:
 	int	10h	
 
 ;=======	get SVGA information
+
+
 
 	mov	ax,	1301h
 	mov	bx,	000Fh
@@ -384,61 +401,123 @@ Label_Get_Mem_OK:
 
 	mov	ax,	0x00
 	mov	es,	ax
-	mov	si,	0x800e
+	
+	mov	si,	0x8000
 
-	mov	esi,	dword	[es:si]
-	mov	edi,	0x8200
+	mov	cx,	22h;;;;;;;;;;;;;;;;;;
+LOOP_Disp_VBE_Info:
 
-Label_SVGA_Mode_Info_Get:
-
-	mov	cx,	word	[es:esi]
-
-;=======	display SVGA mode information
-
-	push	ax
 	
 	mov	ax,	00h
-	mov	al,	ch
+	mov	al,	byte	[es:si]
 	call	Label_DispAL
+	add	si,	1
 
-	mov	ax,	00h
-	mov	al,	cl	
-	call	Label_DispAL
+	loop	LOOP_Disp_VBE_Info
 	
-	pop	ax
+	mov	cx,	0xff;;;;;;;;;;;;;;
 
-;=======
+; LABEL_Get_Mode_List:
 	
-	cmp	cx,	0FFFFh
-	jz	Label_SVGA_Mode_Info_Finish
+	; add	cx,	1
+	; mov	ax,	4F01h
+	; mov	edi,	0x8200
+	; int	10h
+
+	; cmp	ax,	004Fh
+	; jnz	LABEL_Get_Mode_List
+
+	; cmp	cx,	0x1ff
+	; jnz	LABEL_Get_Mode_List
+
+	; jmp	Label_SVGA_Mode_Info_Finish
+	
+	
+	
+LABEL_Get_Mode_List:
+
+	add	cx,	1
+
+	cmp	cx,	0x200
+	jz	LABEL_Get_Mode_Finish
 
 	mov	ax,	4F01h
+	mov	edi,	0x8200
 	int	10h
 
 	cmp	ax,	004Fh
+	jnz	LABEL_Get_Mode_List
 
-	jnz	Label_SVGA_Mode_Info_FAIL	
+	push	ax	
+	mov	ax,	00h
+	mov	al,	ch
+	call	Label_DispAL
+	mov	ax,	00h
+	mov	al,	cl	
+	call	Label_DispAL	
+	pop	ax
 
-	add	esi,	2
-	add	edi,	0x100
+	jmp	LABEL_Get_Mode_List
+	
+LABEL_Get_Mode_Finish:
 
-	jmp	Label_SVGA_Mode_Info_Get
-		
-Label_SVGA_Mode_Info_FAIL:
+	mov	cx,	0x55aa
+	push	ax	
+	mov	ax,	00h
+	mov	al,	ch
+	call	Label_DispAL
+	mov	ax,	00h
+	mov	al,	cl	
+	call	Label_DispAL	
+	pop	ax
+
+	mov	cx,	0x143	;;;;;;;;;;;;mode
+	mov	ax,	4F01h
+	mov	edi,	0x8200
+	int	10h
+
+	push	ax	
+	mov	ax,	00h
+	mov	al,	ch
+	call	Label_DispAL
+	mov	ax,	00h
+	mov	al,	cl	
+	call	Label_DispAL	
+	pop	ax
+
+	mov	cx,	0x55aa
+	push	ax	
+	mov	ax,	00h
+	mov	al,	ch
+	call	Label_DispAL
+	mov	ax,	00h
+	mov	al,	cl	
+	call	Label_DispAL	
+	pop	ax
+
+	mov	si,	0x8200
+	mov	cx,	128
+LOOP_Disp_Mode_Info:
+	mov	ax,	00h
+	mov	al,	byte	[es:si]
+	call	Label_DispAL
+	add	si,	1
+	loop	LOOP_Disp_Mode_Info
+	;jmp	$  ;停下来查看可以用的mode 
+	jmp	Label_SVGA_Mode_Info_Finish
+	
+Label_SET_SVGA_Mode_VESA_VBE_FAIL:
 
 	mov	ax,	1301h
 	mov	bx,	008Ch
 	mov	dx,	0D00h		;row 13
-	mov	cx,	24
+	mov	cx,	27
 	push	ax
 	mov	ax,	ds
 	mov	es,	ax
 	pop	ax
-	mov	bp,	GetSVGAModeInfoErrMessage
+	mov	bp,	SetSVGAModeInfoVBAVESAMessage
 	int	10h
-
-Label_SET_SVGA_Mode_VESA_VBE_FAIL:
-
 	jmp	$
 
 Label_SVGA_Mode_Info_Finish:
@@ -453,25 +532,36 @@ Label_SVGA_Mode_Info_Finish:
 	pop	ax
 	mov	bp,	GetSVGAModeInfoOKMessage
 	int	10h
-
+;	jmp	$  ;停下来查看可以用的mode 
 ;=======	set the SVGA mode(VESA VBE)
 
 	mov	ax,	4F02h
-	mov	bx,	4180h	;========================mode : 0x180 or 0x143
-	int 	10h
+	mov	bx,	4143h	;========================mode : 0x118  143要找一个平台支持的mode
 
+	int 	10h
 	cmp	ax,	004Fh
+	
 	jnz	Label_SET_SVGA_Mode_VESA_VBE_FAIL
+	
 
 ;=======	init IDT GDT goto protect mode 
+	mov	ax,	cs	;4行对应物理平台
+	mov	ds,	ax
+	mov	fs,	ax
+	mov	es,	ax
 
-	cli			;======close interrupt
+	cli
 
-	db	0x66
+	db	66h	
+	lidt	[IDT_POINTER]	
+
+	db	66h
 	lgdt	[GdtPtr]
+	
+	;cli			;======close interrupt
 
-;	db	0x66
-;	lidt	[IDT_POINTER]
+	;lgdt	[GdtPtr]
+
 
 	mov	eax,	cr0
 	or	eax,	1
@@ -492,7 +582,7 @@ GO_TO_TMP_Protect:
 	mov	fs,	ax
 	mov	ss,	ax
 	mov	esp,	7E00h
-
+	
 	call	support_long_mode
 	test	eax,	eax
 
@@ -516,10 +606,9 @@ GO_TO_TMP_Protect:
 	mov	dword	[0x92020],	0x800083
 
 	mov	dword	[0x92028],	0xa00083
-
+	
 ;=======	load GDTR
-
-	db	0x66
+	
 	lgdt	[GdtPtr64]
 	mov	ax,	0x10
 	mov	ds,	ax
@@ -529,7 +618,7 @@ GO_TO_TMP_Protect:
 	mov	ss,	ax
 
 	mov	esp,	7E00h
-
+	
 ;=======	open PAE
 
 	mov	eax,	cr4
@@ -579,11 +668,12 @@ support_long_mode_done:
 ;=======	no support
 
 no_support:
+
 	jmp	$
 
 ;=======	read one sector from floppy
 
-[SECTION .s16lib]
+[SECTION .s116]
 [BITS 16]
 
 Func_ReadOneSector:
@@ -713,6 +803,10 @@ SectorNo		dw	0
 Odd			db	0
 OffsetOfKernelFileCount	dd	OffsetOfKernelFile
 
+MemStructNumber		dd	0
+
+SVGAModeCounter		dd	0
+
 DisplayPosition		dd	0
 
 ;=======	display messages
@@ -720,7 +814,7 @@ DisplayPosition		dd	0
 StartLoaderMessage:	db	"Start Loader"
 NoLoaderMessage:	db	"ERROR:No KERNEL Found"
 KernelFileName:		db	"KERNEL  BIN",0
-StartGetMemStructMessage:	db	"Start Get Memory Struct."
+StartGetMemStructMessage:	db	"Start Get Memory Struct (address,size,type)."
 GetMemStructErrMessage:	db	"Get Memory Struct ERROR"
 GetMemStructOKMessage:	db	"Get Memory Struct SUCCESSFUL!"
 
@@ -731,3 +825,7 @@ GetSVGAVBEInfoOKMessage:	db	"Get SVGA VBE Info SUCCESSFUL!"
 StartGetSVGAModeInfoMessage:	db	"Start Get SVGA Mode Info"
 GetSVGAModeInfoErrMessage:	db	"Get SVGA Mode Info ERROR"
 GetSVGAModeInfoOKMessage:	db	"Get SVGA Mode Info SUCCESSFUL!"
+SetSVGAModeInfoVBAVESAMessage:	db	"Set SVGA Mode VBE VESA Fail"
+
+
+

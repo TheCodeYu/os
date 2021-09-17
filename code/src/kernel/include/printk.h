@@ -1,5 +1,4 @@
 
-
 #ifndef __PRINTK_H__
 #define __PRINTK_H__
 
@@ -69,7 +68,7 @@ int skip_atoi(const char **s);
 
 #define do_div(n,base) ({ \
 int __res; \
-__asm__("divq %%rcx":"=a" (n),"=d" (__res):"0" (n),"1" (0),"c" (base)); \
+__asm__ __volatile__("divq %%rcx":"=a" (n),"=d" (__res):"0" (n),"1" (0),"c" (base)); \
 __res; })
 
 /*
@@ -91,4 +90,5 @@ int vsprintf(char * buf,const char *fmt, va_list args);
 int color_printk(unsigned int FRcolor,unsigned int BKcolor,const char * fmt,...);
 
 #endif
+
 

@@ -13,3 +13,13 @@
 undefined reference to `__stack_chk_fail' 编译选项增加-fno-stack-protector
 
 inline内联函数找不到定义解决：1，inline前加static；2在所需的文件前使用extern引入
+
+relocation truncated to fit: R_X86_64_PC32 against undefined symbol `__switch_to'：
+
+### 3.制作不同大小的img
+
+先用edimg工具把MBR写进去，再用WinImage根据MBR生成
+
+4.物理平台：
+
+选用不同的ModeInfo，使用loader查看各个支持的modeinfo，选择一个可以用的，head.S中配置页表地址
