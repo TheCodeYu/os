@@ -2,9 +2,10 @@
 #ifndef __TIMER_H__
 
 #define __TIMER_H__
+
 #include "lib.h"
 
-unsigned long volatile jiffies = 0;
+extern unsigned long volatile jiffies;
 
 struct timer_list
 {
@@ -14,7 +15,7 @@ struct timer_list
 	void *data;
 };
 
-struct timer_list timer_list_head;
+extern struct timer_list timer_list_head;
 
 void init_timer(struct timer_list * timer,void (* func)(void * data),void *data,unsigned long expire_jiffies);
 
@@ -25,4 +26,5 @@ void del_timer(struct timer_list * timer);
 void timer_init();
 
 void do_timer();
+
 #endif

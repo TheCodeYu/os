@@ -5,6 +5,8 @@
 #include "printk.h"
 #include "timer.h"
 
+struct schedule task_schedule;
+
 struct task_struct *get_next_task()
 {
 	struct task_struct * tsk = NULL;

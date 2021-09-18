@@ -1,14 +1,14 @@
 
 #include <stdarg.h>
 #include "printk.h"
-#include "lib.h"
-#include "linkage.h"
 #include "memory.h"
+#include "spinlock.h"
 
+static char buf[4096]={0};
 
-
+struct position Pos;
 /*
-
+0xe8000000  同head.s中的__PDE
 */
 
 void frame_buffer_init()
@@ -298,9 +298,9 @@ int vsprintf(char * buf,const char *fmt, va_list args)
 				case 'u':
 
 					if(qualifier == 'l')
-						str = number(str,va_arg(args, long),10,field_width,precision,flags);
+						str = number(str,va_arg(args,long),10,field_width,precision,flags);
 					else
-						str = number(str,va_arg(args, int),10,field_width,precision,flags);
+						str = number(str,va_arg(args,int),10,field_width,precision,flags);
 					break;
 
 				case 'n':
@@ -348,15 +348,13 @@ int color_printk(unsigned int FRcolor,unsigned int BKcolor,const char * fmt,...)
 	int line = 0;
 	va_list args;
 
-	
 	if(get_rflags() & 0x200UL)
 	{
 		spin_lock(&Pos.printk_lock);
 	}
+
 	va_start(args, fmt);
-
 	i = vsprintf(buf,fmt, args);
-
 	va_end(args);
 
 	for(count = 0;count < i || line;count++)
@@ -411,9 +409,11 @@ Label_tab:
 		}
 
 	}
-		if(get_rflags() & 0x200UL)
+
+	if(get_rflags() & 0x200UL)
 	{
 		spin_unlock(&Pos.printk_lock);
 	}
+
 	return i;
 }

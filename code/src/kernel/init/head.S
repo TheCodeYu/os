@@ -247,14 +247,14 @@ __PDE:
 
 
 
- .quad 0xe0000083
- .quad 0xe0200083
- .quad 0xe0400083
- .quad 0xe0600083
- .quad 0xe0800083
- .quad 0xe0a00083
- .quad 0xe0c00083
- .quad 0xe0e00083
+ .quad 0xe8000083
+ .quad 0xe8200083
+ .quad 0xe8400083
+ .quad 0xe8600083
+ .quad 0xe8800083
+ .quad 0xe8a00083
+ .quad 0xe8c00083
+ .quad 0xe8e00083
  .fill 480,8,0
 
 

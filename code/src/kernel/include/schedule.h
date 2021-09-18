@@ -1,4 +1,3 @@
-
 #ifndef __SCHEDULE_H__
 
 #define __SCHEDULE_H__
@@ -12,9 +11,11 @@ struct schedule
 	struct task_struct task_queue;
 };
 
-struct schedule task_schedule;
+extern struct schedule task_schedule;
 
 void schedule();
 void schedule_init();
+struct task_struct *get_next_task();
+void insert_task_queue(struct task_struct *tsk);
 
 #endif

@@ -1,6 +1,31 @@
 
 #include "memory.h"
+#include "printk.h"
 #include "lib.h"
+
+unsigned long * Global_CR3 = NULL;
+
+struct Global_Memory_Descriptor memory_management_struct = {{0},0};
+
+struct Slab_cache kmalloc_cache_size[16] = 
+{
+	{32	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{64	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{128	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{256	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{512	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{1024	,0	,0	,NULL	,NULL	,NULL	,NULL},			//1KB
+	{2048	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{4096	,0	,0	,NULL	,NULL	,NULL	,NULL},			//4KB
+	{8192	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{16384	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{32768	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{65536	,0	,0	,NULL	,NULL	,NULL	,NULL},			//64KB
+	{131072	,0	,0	,NULL	,NULL	,NULL	,NULL},			//128KB
+	{262144	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{524288	,0	,0	,NULL	,NULL	,NULL	,NULL},
+	{1048576,0	,0	,NULL	,NULL	,NULL	,NULL},			//1MB
+};
 
 
 unsigned long page_init(struct Page * page,unsigned long flags)
@@ -68,7 +93,6 @@ void init_memory()
 	{
 		if(p->type == 1)
 		color_printk(ORANGE,BLACK,"Address:%#018lx\tLength:%#018lx\tType:%#010x\n",p->address,p->length,p->type);
-		unsigned long tmp = 0;
 		if(p->type == 1)
 			TotalMem +=  p->length;
 
@@ -140,7 +164,6 @@ void init_memory()
 		unsigned long start,end;
 		struct Zone * z;
 		struct Page * p;
-		unsigned long * b;
 
 		if(memory_management_struct.e820[i].type != 1)
 			continue;

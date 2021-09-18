@@ -37,7 +37,8 @@ OLDSS = 0xb8
 
 TSK_STATE = 0x00
 TSK_FLAGS = 0x08
-TSK_SIGNAL = 0x10
+TSK_PREEMPT = 0x10
+TSK_SIGNAL = 0x18
 
 RESTORE_ALL:
  popq %r15;
@@ -68,12 +69,14 @@ RESTORE_ALL:
 
 ret_from_exception:
 
-
 .global ret_from_intr; ret_from_intr:
  movq $-1, %rcx
  testq softirq_status(%rip), %rcx
  jnz softirq_handler
  movq $-32768,%rbx; andq %rsp, %rbx
+ movq TSK_PREEMPT(%rbx), %rcx
+ cmpq $0, %rcx
+ jne RESTORE_ALL
  movq TSK_FLAGS(%rbx), %rcx
  testq $2, %rcx
  jnz reschedule
@@ -82,6 +85,9 @@ ret_from_exception:
 softirq_handler:
  callq do_softirq
  movq $-32768,%rbx; andq %rsp, %rbx
+ movq TSK_PREEMPT(%rbx), %rcx
+ cmpq $0,%rcx
+ jne RESTORE_ALL
  movq TSK_FLAGS(%rbx), %rcx
  testq $2, %rcx
  jnz reschedule

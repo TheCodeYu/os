@@ -7,7 +7,9 @@
 extern unsigned char _APU_boot_start[];
 extern unsigned char _APU_boot_end[];
 
-spinlock_T SMP_lock;
+extern spinlock_T SMP_lock;
+
+extern int global_i;
 
 void SMP_init();
 

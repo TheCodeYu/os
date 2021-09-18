@@ -2,7 +2,6 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
-#include "printk.h"
 #include "lib.h"
 
 //	8Bytes per cell
@@ -107,7 +106,7 @@ typedef struct {unsigned long pt;} pt_t;
 #define mk_pt(addr,attr)	((unsigned long)(addr) | (unsigned long)(attr))
 #define set_pt(ptptr,ptval)		(*(ptptr) = (ptval))
 
-unsigned long * Global_CR3 = NULL;
+extern unsigned long * Global_CR3;
 
 struct E820
 {
@@ -249,25 +248,7 @@ struct Slab_cache
 	kmalloc`s struct
 */
 
-struct Slab_cache kmalloc_cache_size[16] = 
-{
-	{32	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{64	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{128	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{256	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{512	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{1024	,0	,0	,NULL	,NULL	,NULL	,NULL},			//1KB
-	{2048	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{4096	,0	,0	,NULL	,NULL	,NULL	,NULL},			//4KB
-	{8192	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{16384	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{32768	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{65536	,0	,0	,NULL	,NULL	,NULL	,NULL},			//64KB
-	{131072	,0	,0	,NULL	,NULL	,NULL	,NULL},			//128KB
-	{262144	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{524288	,0	,0	,NULL	,NULL	,NULL	,NULL},
-	{1048576,0	,0	,NULL	,NULL	,NULL	,NULL},			//1MB
-};
+extern struct Slab_cache kmalloc_cache_size[16];
 
 #define SIZEOF_LONG_ALIGN(size) ((size + sizeof(long) - 1) & ~(sizeof(long) - 1) )
 #define SIZEOF_INT_ALIGN(size) ((size + sizeof(int) - 1) & ~(sizeof(int) - 1) )

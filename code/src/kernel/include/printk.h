@@ -1,5 +1,6 @@
 
 #ifndef __PRINTK_H__
+
 #define __PRINTK_H__
 
 #include <stdarg.h>
@@ -33,8 +34,6 @@
 
 extern unsigned char font_ascii[256][16];
 
-char buf[4096]={0};
-
 struct position
 {
 	int XResolution;
@@ -50,7 +49,9 @@ struct position
 	unsigned long FB_length;
 
 	spinlock_T printk_lock;
-}Pos;
+};
+
+extern struct position Pos;
 
 /*
 

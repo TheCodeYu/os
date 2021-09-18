@@ -7,6 +7,9 @@
 #include "interrupt.h"
 #include "task.h"
 
+spinlock_T SMP_lock;
+int global_i = 0;
+
 void SMP_init()
 {
 	int i;
@@ -35,7 +38,6 @@ void SMP_init()
 	memset(SMP_IPI_desc,0,sizeof(irq_desc_T) * 10);
 }
 
-extern int global_i;
 
 void Start_SMP()
 {
@@ -86,7 +88,7 @@ void Start_SMP()
 
 	memset(current,0,sizeof(struct task_struct));
 	
-	load_TR(10 + (global_i -1)* 2);
+	load_TR(10 + (global_i -1) * 2);
 
 	spin_unlock(&SMP_lock);
 	sti();

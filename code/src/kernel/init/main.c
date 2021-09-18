@@ -26,12 +26,6 @@
 //使用模式号143 VM上1280*960 b上800*600
 	//虚拟物理是反的，但是这里只需要根据自己的字符设计的XY填充即可
 
-struct Global_Memory_Descriptor memory_management_struct = {{0},0};
-
-int global_i = 0;
-
-extern spinlock_T SMP_lock;
-
 void Start_Kernel(void)
 {
 	struct INT_CMD_REG icr_entry;
@@ -152,7 +146,7 @@ void Start_Kernel(void)
 	color_printk(RED,BLACK,"HPET init \n");
 	HPET_init();
 
-	color_printk(RED,BLACK,"task init \n");
+	color_printk(RED,BLACK,"\n\n\n\ntask init \n");
 	sti();
 	task_init();
 

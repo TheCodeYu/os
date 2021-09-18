@@ -1,31 +1,53 @@
-/***************************************************
-*		版权声明
-*
-*	本操作系统名为：MINE
-*	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-*	只允许个人学习以及公开交流使用
-*
-*	代码最终所有权及解释权归田宇所有；
-*
-*	本模块作者：	田宇
-*	EMail:		345538255@qq.com
-*
-*
-***************************************************/
 
 #include "task.h"
 #include "ptrace.h"
-#include "printk.h"
 #include "lib.h"
 #include "memory.h"
 #include "linkage.h"
 #include "gate.h"
 #include "schedule.h"
+#include "printk.h"
 
 
-extern void ret_system_call(void);
-extern void system_call(void);
+struct mm_struct init_mm = {0};
 
+struct thread_struct init_thread = 
+{
+	.rsp0 = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long)),
+	.rsp = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long)),
+	.fs = KERNEL_DS,
+	.gs = KERNEL_DS,
+	.cr2 = 0,
+	.trap_nr = 0,
+	.error_code = 0
+};
+
+
+union task_union init_task_union __attribute__((__section__ (".data.init_task"))) = {INIT_TASK(init_task_union.task)};
+
+struct task_struct *init_task[NR_CPUS] = {&init_task_union.task,0};
+
+
+struct tss_struct init_tss[NR_CPUS] = { [0 ... NR_CPUS-1] = INIT_TSS };
+
+system_call_t system_call_table[MAX_SYSTEM_CALL_NR] = 
+{
+	[0] = no_system_call,
+	[1] = sys_printf,
+	[2 ... MAX_SYSTEM_CALL_NR-1] = no_system_call
+};
+
+unsigned long no_system_call(struct pt_regs * regs)
+{
+	color_printk(RED,BLACK,"no_system_call is calling,NR:%#04x\n",regs->rax);
+	return -1;
+}
+
+unsigned long sys_printf(struct pt_regs * regs)
+{
+	color_printk(BLACK,WHITE,(char *)regs->rdi);
+	return 1;
+}
 
 void user_level_function()
 {
@@ -127,7 +149,8 @@ unsigned long do_fork(struct pt_regs * regs, unsigned long clone_flags, unsigned
 	list_init(&tsk->list);
 
 	tsk->priority = 2;
-	tsk->pid++;	
+	tsk->pid++;
+	tsk->preempt_count = 0;
 	tsk->state = TASK_UNINTERRUPTIBLE;
 
 	thd = (struct thread_struct *)(tsk + 1);
@@ -245,8 +268,6 @@ inline void __switch_to(struct task_struct *prev,struct task_struct *next)
 
 void task_init()
 {
-	struct task_struct *tmp = NULL;
-
 	init_mm.pgd = (pml4t_t *)Global_CR3;
 
 	init_mm.start_code = memory_management_struct.start_code;
@@ -276,9 +297,7 @@ void task_init()
 
 	kernel_thread(init,10,CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
 
+	init_task_union.task.preempt_count = 0;
 	init_task_union.task.state = TASK_RUNNING;
-
-//	tmp = container_of(list_next(&task_schedule.task_queue.list),struct task_struct,list);
-//	switch_to(current,tmp);
 }
 
