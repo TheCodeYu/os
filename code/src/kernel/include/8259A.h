@@ -1,12 +1,16 @@
-#ifndef __INTERRUPT_H__
-#define __INTERRUPT_H__
+
+#ifndef __8259A_H__
+#define __8259A_H__
+
 #include "linkage.h"
 #include "ptrace.h"
+
+
 /*
 
 */
 
-void init_interrupt();
+void init_8259A();
 
 /*
 

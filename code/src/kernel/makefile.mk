@@ -8,6 +8,9 @@ export RM = -rm -rf
 
 export CFLAGS += -mcmodel=large -fno-builtin -fno-stack-protector -m64 -std=gnu89
 
+
+export PIC = APIC
+export DFLAGS += $(PIC)
 # -Wno-trigraphs \
 # 		   -fno-strict-aliasing -fno-common \
 # 		   -Werror-implicit-function-declaration \

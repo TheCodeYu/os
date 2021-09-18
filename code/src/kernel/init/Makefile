@@ -19,14 +19,15 @@ ECHO:
 	@echo "Compiling " $(SUBDIRS) "..."	
 
 $(OBJS):%.o:%.c 
-	$(CC) -c $< -o $(BUILD)/$@ $(CFLAGS) $(DEPENDS)   
+	$(CC) -c $< -o $(BUILD)/$@ $(CFLAGS) $(DEPENDS)   -D$(DFLAGS)
 
 system:
 	$(CC) -E  head.S > head.s $(DEPENDS)  
 	as --64 -o $(BUILD)/head.o head.s
 	$(CC) -E  entry.S > entry.s $(DEPENDS) 
 	as --64 -o $(BUILD)/entry.o entry.s
-
+	$(CC) -E APU_boot.S > APU_boot.s $(DEPENDS) 
+	as $--64 -o  $(BUILD)/APU_boot.o APU_boot.s
 clean:
 	@for dir in $(SUBDIRS);\
 	do $(MAKE) -C $$dir clean||exit 1;\

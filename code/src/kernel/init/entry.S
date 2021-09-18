@@ -34,6 +34,11 @@ RFLAGS = 0xa8
 OLDRSP = 0xb0
 OLDSS = 0xb8
 
+
+TSK_STATE = 0x00
+TSK_FLAGS = 0x08
+TSK_SIGNAL = 0x10
+
 RESTORE_ALL:
  popq %r15;
  popq %r14;
@@ -63,8 +68,29 @@ RESTORE_ALL:
 
 ret_from_exception:
 
+
 .global ret_from_intr; ret_from_intr:
+ movq $-1, %rcx
+ testq softirq_status(%rip), %rcx
+ jnz softirq_handler
+ movq $-32768,%rbx; andq %rsp, %rbx
+ movq TSK_FLAGS(%rbx), %rcx
+ testq $2, %rcx
+ jnz reschedule
  jmp RESTORE_ALL
+
+softirq_handler:
+ callq do_softirq
+ movq $-32768,%rbx; andq %rsp, %rbx
+ movq TSK_FLAGS(%rbx), %rcx
+ testq $2, %rcx
+ jnz reschedule
+ jmp RESTORE_ALL
+
+reschedule:
+ callq schedule
+ jmp RESTORE_ALL
+
 
 .global system_call; system_call:
  sti

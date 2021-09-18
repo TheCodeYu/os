@@ -82,28 +82,30 @@ struct thread_struct
 
 */
 
-#define PF_KTHREAD	(1 << 0)
-
 struct task_struct
 {
-	struct List list;
 	volatile long state;
 	unsigned long flags;
+	long signal;
 
 	struct mm_struct *mm;
 	struct thread_struct *thread;
 
+	struct List list;
+
 	unsigned long addr_limit;	/*0x0000,0000,0000,0000 - 0x0000,7fff,ffff,ffff user*/
 					/*0xffff,8000,0000,0000 - 0xffff,ffff,ffff,ffff kernel*/
-
 	long pid;
-
-	long counter;
-
-	long signal;
-
 	long priority;
+	long vrun_time;
 };
+
+///////struct task_struct->flags:
+
+#define PF_KTHREAD	(1UL << 0)
+#define NEED_SCHEDULE	(1UL << 1)
+
+
 
 union task_union
 {
@@ -118,13 +120,13 @@ struct thread_struct init_thread;
 {			\
 	.state = TASK_UNINTERRUPTIBLE,		\
 	.flags = PF_KTHREAD,		\
+	.signal = 0,		\
 	.mm = &init_mm,			\
 	.thread = &init_thread,		\
 	.addr_limit = 0xffff800000000000,	\
 	.pid = 0,			\
-	.counter = 1,		\
-	.signal = 0,		\
-	.priority = 0		\
+	.priority = 2,		\
+	.vrun_time = 0		\
 }
 
 union task_union init_task_union __attribute__((__section__ (".data.init_task"))) = {INIT_TASK(init_task_union.task)};
@@ -261,4 +263,3 @@ system_call_t system_call_table[MAX_SYSTEM_CALL_NR] =
 
 
 #endif
-

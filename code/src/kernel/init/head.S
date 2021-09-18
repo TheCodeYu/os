@@ -35,7 +35,7 @@
  mov %ax, %gs
  mov %ax, %ss
 
- movq $0x7E00, %rsp
+ movq _stack_start(%rip), %rsp
 
 
 
@@ -58,6 +58,11 @@ entry64:
  movq %rax, %gs
  movq %rax, %ss
  movq _stack_start(%rip), %rsp
+
+ movq $0x1b, %rcx
+ rdmsr
+ bt $8, %rax
+ jnc start_smp
 
 setup_IDT:
  leaq ignore_int(%rip), %rdx
@@ -110,6 +115,15 @@ setup_TSS64:
 
 go_to_kernel:
  .quad Start_Kernel
+
+start_smp:
+ movq go_to_smp_kernel(%rip), %rax
+ pushq $0x08
+ pushq %rax
+ lretq
+
+go_to_smp_kernel:
+ .quad Start_SMP
 
 
 
@@ -184,44 +198,64 @@ int_msg:
  .quad init_task_union + 32768
 
 
-
-
 .align 8
 
 .org 0x1000
 
 __PML4E:
 
- .quad 0x102007
+ .quad 0x102003
  .fill 255,8,0
- .quad 0x102007
+ .quad 0x102003
  .fill 255,8,0
 
 .org 0x2000
 
 __PDPTE:
 
- .quad 0x103007
+ .quad 0x103003
  .fill 511,8,0
 
 .org 0x3000
 
 __PDE:
 
- .quad 0x000087
- .quad 0x200087
- .quad 0x400087
- .quad 0x600087
- .quad 0x800087
- .quad 0xe8000087
- .quad 0xe8200087
- .quad 0xe8400087
- .quad 0xe8600087
- .quad 0xe8800087
- .quad 0xe8a00087
- .quad 0xe8c00087
- .quad 0xe8e00087
- .fill 499,8,0
+ .quad 0x000083
+ .quad 0x200083
+ .quad 0x400083
+ .quad 0x600083
+ .quad 0x800083
+ .quad 0xa00083
+ .quad 0xc00083
+ .quad 0xe00083
+ .quad 0x1000083
+ .quad 0x1200083
+ .quad 0x1400083
+ .quad 0x1600083
+ .quad 0x1800083
+ .quad 0x1a00083
+ .quad 0x1c00083
+ .quad 0x1e00083
+ .quad 0x2000083
+ .quad 0x2200083
+ .quad 0x2400083
+ .quad 0x2600083
+ .quad 0x2800083
+ .quad 0x2a00083
+ .quad 0x2c00083
+ .quad 0x2e00083
+
+
+
+ .quad 0xe0000083
+ .quad 0xe0200083
+ .quad 0xe0400083
+ .quad 0xe0600083
+ .quad 0xe0800083
+ .quad 0xe0a00083
+ .quad 0xe0c00083
+ .quad 0xe0e00083
+ .fill 480,8,0
 
 
 
@@ -239,7 +273,7 @@ GDT_Table:
  .quad 0x0000f20000000000
  .quad 0x00cf9a000000ffff
  .quad 0x00cf92000000ffff
- .fill 10,8,0
+ .fill 100,8,0
 GDT_END:
 
 GDT_POINTER:
@@ -265,8 +299,3 @@ IDT_BASE: .quad IDT_Table
 TSS64_Table:
  .fill 13,8,0
 TSS64_END:
-
-
-TSS64_POINTER:
-TSS64_LIMIT: .word TSS64_END - TSS64_Table - 1
-TSS64_BASE: .quad TSS64_Table
